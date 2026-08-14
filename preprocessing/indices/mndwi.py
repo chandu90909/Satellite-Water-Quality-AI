@@ -1,61 +1,57 @@
-import rasterio
-import numpy as np
-import matplotlib.pyplot as plt
-import glob
 import os
+import sys
+import glob
+import numpy as np
+import rasterio
 
-# ---------------------------------------
-# Input Images
-# ---------------------------------------
+# --------------------------------------------------
+# Add Project Root to Python Path
+# --------------------------------------------------
+
+PROJECT_ROOT = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..")
+)
+
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+from preprocessing.utils.save_index import save_index
+
+# --------------------------------------------------
+# Read All Sentinel-2 Images
+# --------------------------------------------------
 
 files = sorted(glob.glob("data/raw/Hussain_Sagar/*.tif"))
 
-# ---------------------------------------
-# Output Folder
-# ---------------------------------------
+print("=" * 60)
+print(f"Found {len(files)} Sentinel-2 Images")
+print("=" * 60)
 
-output_folder = "preprocessing/outputs/mndwi"
-
-os.makedirs(output_folder, exist_ok=True)
-
-# ---------------------------------------
+# --------------------------------------------------
 # Process Every Image
-# ---------------------------------------
+# --------------------------------------------------
 
-for file in files:
+for image in files:
 
-    with rasterio.open(file) as src:
+    print("\nProcessing:", os.path.basename(image))
+
+    with rasterio.open(image) as src:
 
         green = src.read(3).astype(np.float32)
         swir = src.read(11).astype(np.float32)
 
-    mndwi = (green - swir) / (green + swir + 1e-10)
+        mndwi = (green - swir) / (green + swir + 1e-10)
 
-    print("=" * 50)
-    print(os.path.basename(file))
-    print("Minimum :", np.min(mndwi))
-    print("Maximum :", np.max(mndwi))
-    print("Mean    :", np.mean(mndwi))
+        mndwi[green == 0] = np.nan
 
-    plt.figure(figsize=(8,8))
+        save_index(
+            index_array=mndwi,
+            src=src,
+            image_path=image,
+            index_name="mndwi",
+            cmap="Blues"
+        )
 
-    plt.imshow(mndwi, cmap="Blues")
-
-    plt.colorbar(label="MNDWI")
-
-    plt.title(os.path.basename(file))
-
-    plt.axis("off")
-
-    output = os.path.join(
-        output_folder,
-        os.path.basename(file).replace(".tif", "_mndwi.png")
-    )
-
-    plt.savefig(output, dpi=300)
-
-    plt.show()
-
-    plt.close()
-
-print("\nFinished.")
+print("\n" + "=" * 60)
+print("MNDWI Processing Completed Successfully")
+print("=" * 60)
