@@ -22,6 +22,21 @@ The current workflow preserves the existing trained checkpoints and adds the mis
 - `temporal`: temporal trend plotting and change detection.
 - `outputs`: prediction CSVs, GIS maps, severity summaries, and temporal charts.
 
+## Quick start from GitHub
+
+The code and trained checkpoints are stored in the repository. Large Sentinel-2 inputs, prepared datasets, and generated outputs are intentionally excluded, so a fresh clone can run the dashboard immediately and regenerate analysis products with the pipeline.
+
+```bash
+git lfs install
+git clone https://github.com/chandu90909/Satellite-Water-Quality-AI.git
+cd Satellite-Water-Quality-AI
+py -3.11 -m venv .venv311
+.venv311\Scripts\python.exe -m pip install -r requirements.txt
+.venv311\Scripts\python.exe backend\server.py
+```
+
+Open `http://127.0.0.1:8000`. The two model checkpoints are downloaded through Git LFS. To populate imagery and dashboard results, configure Earth Engine as described below and run a lake through `pipeline/run_lake.py`, or point the pipeline at imagery already on disk.
+
 ## Inference commands
 
 Run a single lake image:
