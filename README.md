@@ -28,7 +28,7 @@ The code and trained checkpoints are stored in the repository. Large Sentinel-2 
 
 ```bash
 git lfs install
-git clone -b aquascope-platform https://github.com/chandu90909/Satellite-Water-Quality-AI.git
+git clone https://github.com/chandu90909/Satellite-Water-Quality-AI.git
 cd Satellite-Water-Quality-AI
 py -3.11 -m venv .venv311
 .venv311\Scripts\python.exe -m pip install -r requirements.txt
