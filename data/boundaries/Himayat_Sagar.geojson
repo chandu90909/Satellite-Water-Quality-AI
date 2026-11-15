@@ -1,0 +1,49 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Himayat Sagar",
+        "slug": "Himayat_Sagar",
+        "source": "openstreetmap:relation/5411363 (bbox)",
+        "bbox": [
+          78.3316777,
+          17.2813762,
+          78.3755895,
+          17.3456276
+        ],
+        "osm_relation": 5411363,
+        "wikidata": "Q5765170",
+        "resolved_at": "2026-11-15T07:02:33+00:00"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              78.3316777,
+              17.2813762
+            ],
+            [
+              78.3755895,
+              17.2813762
+            ],
+            [
+              78.3755895,
+              17.3456276
+            ],
+            [
+              78.3316777,
+              17.3456276
+            ],
+            [
+              78.3316777,
+              17.2813762
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

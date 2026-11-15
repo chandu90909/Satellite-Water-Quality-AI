@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+__pycache__*/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Virtual environments
+.venv/
+.venv-*/
+.venv311/
+
+# Vendored fallback packages
+python_packages/
+
+# Agent workspace metadata
+.freebuff/
+
+# Local server logs and runtime files
+*.log
+.server_*.pid
+
+# Secrets
+.env
+.env.*
+!.env.example
+secrets/
+*.pem
+*.key
+
+# Large inputs and generated artifacts
+data/raw/
+data/masks/
+data/processed/
+data/datasets/
+outputs/
+
+# Model weights are committed with Git LFS (see .gitattributes)
+# models/**/*.pth

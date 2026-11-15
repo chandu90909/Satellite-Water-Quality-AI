@@ -1,0 +1,12 @@
+numpy>=2.0,<3
+pandas>=2.0,<3
+rasterio>=1.4,<2
+matplotlib>=3.8,<4
+# torch 2.8 publishes wheels for Python 3.9-3.13; use a 3.11-3.13 interpreter
+# for the classification and Grad-CAM stages (Python 3.14 has no torch wheel yet).
+torch>=2.8,<2.9
+torchvision>=0.23,<0.24
+pytest>=8.0
+# Google Earth Engine acquisition for new lakes
+earthengine-api>=1.4,<2
+requests>=2.31,<3

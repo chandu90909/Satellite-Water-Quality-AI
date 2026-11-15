@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0f2f4a">
+  <meta name="description" content="Satellite water quality monitoring for inland lakes using Sentinel-2 imagery and explainable machine learning.">
+  <title>AquaScope | Satellite Water Quality Monitoring</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script>
+    (() => {
+      try {
+        document.documentElement.classList.add("js");
+        const stored = localStorage.getItem("aquascope-theme");
+        document.documentElement.dataset.theme = stored || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      } catch (_) {}
+    })();
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#overview">Skip to main content</a>
+
+  <div class="utility-bar">
+    <div class="utility-inner">
+      <span>Satellite Water Quality Monitoring Platform</span>
+      <span class="utility-meta">Sentinel-2 L2A &middot; Google Earth Engine</span>
+    </div>
+  </div>
+
+  <header class="topbar">
+    <a class="brand" href="#overview" aria-label="AquaScope home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none">
+          <path d="M16 4.5c3.9 4.3 6.8 7.6 6.8 11.1a6.8 6.8 0 1 1-13.6 0C9.2 12.1 12.1 8.8 16 4.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+          <path d="M9.5 18.5c1.7.7 3.4.7 5.5 0s3.8-.7 5.5 0M10.5 22.2c1.4.6 2.9.6 4.3 0 1.4-.6 2.9-.6 4.3 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <span class="brand-text"><strong>AquaScope</strong><small>Satellite water quality monitoring</small></span>
+    </a>
+    <nav class="topnav" aria-label="Primary">
+      <a href="#overview" class="active">Overview</a>
+      <a href="#analysis-panel">New analysis</a>
+      <a href="#trend-section">Trends</a>
+      <a href="#explainability-section">Explainability</a>
+    </nav>
+    <div class="topbar-actions">
+      <span class="live-pill" title="Acquisitions available in this workspace"><span class="pulse-dot" aria-hidden="true"></span><span id="batch-count">Loading outputs</span></span>
+      <button class="icon-button" id="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.7"/><path d="M12 2.8v2.3M12 18.9v2.3M4.5 12H2.2M21.8 12h-2.3M5.9 5.9 4.3 4.3M19.7 19.7l-1.6-1.6M18.1 5.9l1.6-1.6M4.3 19.7l1.6-1.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 14.2A8.2 8.2 0 0 1 9.8 4a8.2 8.2 0 1 0 10.2 10.2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="hero" id="overview">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> Inland water monitoring</p>
+        <h1>Satellite monitoring of inland lake water quality</h1>
+        <p class="hero-sub">AquaScope analyses Sentinel-2 surface-reflectance imagery to classify water-quality proxies, assess severity, and provide transparent model explanations for every acquisition.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#analysis-panel"><span>Start a new analysis</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+          <a class="button button-ghost" href="#trend-section">Review monitoring record</a>
+        </div>
+        <dl class="hero-stats">
+          <div><dt>Lakes monitored</dt><dd id="hero-lakes">--</dd></div>
+          <div><dt>Acquisitions processed</dt><dd id="hero-acquisitions">--</dd></div>
+          <div><dt>Latest composite</dt><dd id="hero-latest">--</dd></div>
+        </dl>
+      </div>
+      <aside class="hero-panel" aria-label="Platform configuration">
+        <header>
+          <h2>Platform configuration</h2>
+          <span class="status-label"><span aria-hidden="true"></span>Operational</span>
+        </header>
+        <dl>
+          <div><dt>Imagery</dt><dd>Sentinel-2 L2A</dd></div>
+          <div><dt>Processing</dt><dd>Google Earth Engine</dd></div>
+          <div><dt>Classification</dt><dd>EfficientNet-B0</dd></div>
+          <div><dt>Interpretation</dt><dd>Grad-CAM</dd></div>
+          <div><dt>Spatial resolution</dt><dd>10 m</dd></div>
+        </dl>
+        <p class="hero-panel-note">Outputs are satellite-derived indicators intended to support monitoring, not a substitute for laboratory analysis.</p>
+      </aside>
+    </section>
+
+    <div id="error-banner" class="error-banner" role="alert" hidden></div>
+
+    <section id="analysis-panel" class="panel analysis-panel reveal" aria-labelledby="analysis-title">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Analysis setup</p>
+          <h2 id="analysis-title">New monitoring analysis</h2>
+          <p class="panel-sub">Specify a lake and observation period. The processing pipeline runs locally and reports progress below.</p>
+        </div>
+        <span class="badge badge-amber"><span class="badge-dot"></span>Earth Engine</span>
+      </div>
+      <p id="gee-config-hint" class="gee-hint" role="status" hidden></p>
+
+      <form id="analysis-form" class="analysis-form">
+        <div class="form-grid">
+          <label class="field field-lake" for="analysis-lake">
+            <span class="field-label">Lake name</span>
+            <span class="input-shell">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s6.5-5.4 6.5-10.2A6.5 6.5 0 0 0 5.5 10.8C5.5 15.6 12 21 12 21Z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="10.5" r="2.2" stroke="currentColor" stroke-width="1.6"/></svg>
+              <input id="analysis-lake" name="lake" type="text" list="lake-options" value="Hussain Sagar" placeholder="e.g. Kolleru Lake" autocomplete="off" required>
+            </span>
+            <datalist id="lake-options"></datalist>
+          </label>
+          <label class="field" for="analysis-start-date"><span class="field-label">Start date</span><input id="analysis-start-date" name="start-date" type="date" value="2025-01-01" required></label>
+          <label class="field" for="analysis-end-date"><span class="field-label">End date</span><input id="analysis-end-date" name="end-date" type="date" value="2025-03-31" required></label>
+          <label class="field" for="analysis-cadence"><span class="field-label">Compositing</span><select id="analysis-cadence" name="cadence"><option value="monthly" selected>Monthly composite</option><option value="scene">Every clear acquisition</option></select></label>
+        </div>
+        <div class="form-row">
+          <label class="field cloud-field" for="cloud-cover">
+            <span class="field-label cloud-label">Maximum cloud cover <output id="cloud-cover-value" for="cloud-cover">20%</output></span>
+            <input id="cloud-cover" name="cloud-cover" type="range" min="0" max="100" step="1" value="20">
+            <span class="range-scale"><span>0%</span><span>50%</span><span>100%</span></span>
+          </label>
+          <label class="field boundary-field" for="analysis-boundary">
+            <span class="field-label">Boundary GeoJSON <em>optional</em></span>
+            <input id="analysis-boundary" name="boundary" type="text" placeholder="data/boundaries/My_Lake.geojson" autocomplete="off">
+            <small class="field-help">Leave empty to resolve the lake automatically: cached boundary, existing imagery, then OpenStreetMap.</small>
+          </label>
+        </div>
+        <div class="form-actions">
+          <p id="analysis-form-message" class="form-message" role="status" aria-live="polite"></p>
+          <button class="button button-primary run-analysis-button" type="submit">
+            <span class="button-spinner" aria-hidden="true"></span>
+            <span class="button-label">Run analysis</span>
+            <svg class="button-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </form>
+
+      <div id="job-status" class="job-status" hidden>
+        <div class="job-head">
+          <span class="job-heading"><span class="job-spinner" aria-hidden="true"></span><span class="eyebrow">Analysis job</span></span>
+          <span id="job-state" class="job-state queued">Queued</span>
+        </div>
+        <p id="job-message" class="job-message"></p>
+        <div class="progress-row">
+          <div class="progress-track"><div id="job-progress-bar" class="progress-fill"></div></div>
+          <span id="job-progress-label" class="progress-label">0%</span>
+        </div>
+        <pre id="job-log" class="job-log" aria-live="polite"></pre>
+      </div>
+
+      <div class="workflow">
+        <div class="workflow-head">
+          <div><p class="eyebrow">Workflow</p><h3>Processing sequence</h3></div>
+          <span class="panel-meta">Nine automated stages</span>
+        </div>
+        <ol class="workflow-list">
+          <li data-stage="download"><span class="step-index">01</span><span class="step-text">Search Sentinel-2 imagery</span></li>
+          <li data-stage="download"><span class="step-index">02</span><span class="step-text">Download selected acquisitions</span></li>
+          <li data-stage="water_masks"><span class="step-index">03</span><span class="step-text">Preprocess spectral bands and indices</span></li>
+          <li data-stage="water_masks"><span class="step-index">04</span><span class="step-text">Generate water masks</span></li>
+          <li data-stage="classification"><span class="step-index">05</span><span class="step-text">Run EfficientNet-B0 classification</span></li>
+          <li data-stage="severity"><span class="step-index">06</span><span class="step-text">Generate quality and severity maps</span></li>
+          <li data-stage="gradcam"><span class="step-index">07</span><span class="step-text">Generate Grad-CAM explanations</span></li>
+          <li data-stage="temporal"><span class="step-index">08</span><span class="step-text">Perform temporal analysis</span></li>
+          <li data-stage="validation"><span class="step-index">09</span><span class="step-text">Validate and report results</span></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="lake-switcher reveal" aria-label="Lake and acquisition selection">
+      <div class="lake-heading">
+        <div>
+          <p class="eyebrow">Monitoring record</p>
+          <h2 id="lake-title">Loading</h2>
+          <p id="image-caption" class="image-caption"></p>
+        </div>
+        <div class="switcher-fields">
+          <label class="compact-field" for="lake-select"><span>Lake</span><select id="lake-select" aria-label="Select lake"></select></label>
+          <label class="compact-field" for="image-select"><span>Acquisition</span><select id="image-select" aria-label="Select acquisition"></select></label>
+        </div>
+      </div>
+    </section>
+
+    <section class="overview-grid" aria-label="Selected acquisition quality proportions">
+      <div class="kpi-grid">
+        <article class="kpi kpi-good reveal">
+          <div class="kpi-top"><span class="kpi-dot"></span><span class="kpi-name">Good</span><span class="kpi-tag">Healthy proxy</span></div>
+          <strong id="good-value" class="kpi-value">--</strong>
+          <div class="kpi-bar"><span id="good-bar"></span></div>
+          <p class="kpi-note">Share of classified patches</p>
+        </article>
+        <article class="kpi kpi-moderate reveal">
+          <div class="kpi-top"><span class="kpi-dot"></span><span class="kpi-name">Moderate</span><span class="kpi-tag">Watch</span></div>
+          <strong id="moderate-value" class="kpi-value">--</strong>
+          <div class="kpi-bar"><span id="moderate-bar"></span></div>
+          <p class="kpi-note">Share of classified patches</p>
+        </article>
+        <article class="kpi kpi-poor reveal">
+          <div class="kpi-top"><span class="kpi-dot"></span><span class="kpi-name">Poor</span><span class="kpi-tag">Stressed</span></div>
+          <strong id="poor-value" class="kpi-value">--</strong>
+          <div class="kpi-bar"><span id="poor-bar"></span></div>
+          <p class="kpi-note">Share of classified patches</p>
+        </article>
+      </div>
+
+      <article class="panel distribution-panel reveal">
+        <div class="panel-head compact">
+          <div><p class="eyebrow">Distribution</p><h3>Class mix</h3></div>
+          <span class="panel-meta">EfficientNet-B0</span>
+        </div>
+        <div class="donut-wrap">
+          <svg class="donut" viewBox="0 0 140 140" role="img" aria-label="Class distribution donut chart">
+            <circle class="donut-track" cx="70" cy="70" r="54" pathLength="100"></circle>
+            <circle id="donut-good" class="donut-seg donut-good" cx="70" cy="70" r="54" pathLength="100"></circle>
+            <circle id="donut-moderate" class="donut-seg donut-moderate" cx="70" cy="70" r="54" pathLength="100"></circle>
+            <circle id="donut-poor" class="donut-seg donut-poor" cx="70" cy="70" r="54" pathLength="100"></circle>
+          </svg>
+          <div class="donut-center"><strong id="donut-total">--</strong><span>patches</span></div>
+        </div>
+        <ul class="donut-legend">
+          <li><span class="legend-dot dot-good"></span>Good<strong id="legend-good">--</strong></li>
+          <li><span class="legend-dot dot-moderate"></span>Moderate<strong id="legend-moderate">--</strong></li>
+          <li><span class="legend-dot dot-poor"></span>Poor<strong id="legend-poor">--</strong></li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="primary-grid">
+      <article class="panel map-panel reveal">
+        <div class="panel-head">
+          <div><p class="eyebrow">Spatial classification</p><h3>Water quality map</h3></div>
+          <div class="panel-tools">
+            <span id="map-image-label" class="panel-meta"></span>
+            <button id="map-expand" class="icon-button small" type="button" aria-label="Expand map" title="Expand map"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
+        </div>
+        <div class="map-frame" id="map-frame">
+          <img id="quality-map" alt="Satellite-derived water quality classification map" hidden>
+          <div id="map-empty" class="empty-state">No quality map is available for this acquisition.</div>
+          <div class="map-shimmer" aria-hidden="true"></div>
+          <span class="map-tag">10 m resolution</span>
+        </div>
+        <div class="map-legend" aria-label="Map legend">
+          <span><i class="legend-swatch swatch-good"></i>Good</span>
+          <span><i class="legend-swatch swatch-moderate"></i>Moderate</span>
+          <span><i class="legend-swatch swatch-poor"></i>Poor</span>
+          <span><i class="legend-swatch swatch-background"></i>Outside mask</span>
+        </div>
+      </article>
+      <aside class="panel readout-panel reveal">
+        <p class="eyebrow">Acquisition summary</p>
+        <h3 id="dominant-quality">--</h3>
+        <p class="readout-caption">Dominant proxy class</p>
+        <span id="dominant-severity-badge" class="severity-badge">--</span>
+        <div class="readout-rule"></div>
+        <dl class="readout-list">
+          <div><dt>Acquisition</dt><dd id="readout-image">--</dd></div>
+          <div><dt>Severity</dt><dd id="dominant-severity">--</dd></div>
+          <div><dt>Classified patches</dt><dd id="patch-count">--</dd></div>
+          <div><dt>Lake coverage</dt><dd id="image-count">--</dd></div>
+        </dl>
+        <p class="readout-note">Classes represent satellite-derived proxies, not laboratory measurements.</p>
+      </aside>
+    </section>
+
+    <section id="trend-section" class="panel trend-panel reveal">
+      <div class="panel-head">
+        <div><p class="eyebrow">Temporal analysis</p><h3>Proxy-class trend</h3></div>
+        <div class="segmented" role="group" aria-label="Trend range">
+          <button type="button" data-range="all" class="active">All</button>
+          <button type="button" data-range="6">Last 6</button>
+          <button type="button" data-range="3">Last 3</button>
+        </div>
+      </div>
+      <div class="chart-shell">
+        <canvas id="trend-chart" aria-label="Temporal trend of quality classes" role="img"></canvas>
+        <div id="chart-tooltip" class="chart-tooltip" hidden>
+          <span id="tooltip-title" class="tooltip-title"></span>
+          <span class="tooltip-row"><i class="legend-dot dot-good"></i>Good<b id="tooltip-good"></b></span>
+          <span class="tooltip-row"><i class="legend-dot dot-moderate"></i>Moderate<b id="tooltip-moderate"></b></span>
+          <span class="tooltip-row"><i class="legend-dot dot-poor"></i>Poor<b id="tooltip-poor"></b></span>
+        </div>
+      </div>
+      <div class="chart-legend">
+        <span><i class="line-swatch line-good"></i>Good</span>
+        <span><i class="line-swatch line-moderate"></i>Moderate</span>
+        <span><i class="line-swatch line-poor"></i>Poor</span>
+        <span class="chart-hint">Hover the chart for acquisition values</span>
+      </div>
+    </section>
+
+    <section id="explainability-section" class="panel explainability-panel reveal">
+      <div class="panel-head">
+        <div><p class="eyebrow">Model interpretation</p><h3>Grad-CAM explanations</h3></div>
+        <span class="panel-meta">Highest-confidence patch per predicted class</span>
+      </div>
+      <div id="gradcam-grid" class="gradcam-grid"><p class="empty-state">No explanations generated for this acquisition.</p></div>
+    </section>
+
+    <section class="panel table-panel reveal">
+      <div class="panel-head">
+        <div><p class="eyebrow">Monitoring record</p><h3>Acquisition register</h3></div>
+        <div class="table-tools">
+          <label class="search-field" for="table-search">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.8" stroke="currentColor" stroke-width="1.7"/><path d="m15 15 4.5 4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            <input id="table-search" type="search" placeholder="Filter acquisitions" autocomplete="off">
+          </label>
+          <span id="table-count" class="panel-meta"></span>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th><button type="button" data-sort="image">Image <span class="sort-ind">↑</span></button></th>
+              <th><button type="button" data-sort="good_percentage">Good <span class="sort-ind">↕</span></button></th>
+              <th><button type="button" data-sort="moderate_percentage">Moderate <span class="sort-ind">↕</span></button></th>
+              <th><button type="button" data-sort="poor_percentage">Poor <span class="sort-ind">↕</span></button></th>
+              <th><button type="button" data-sort="dominant">Dominant <span class="sort-ind">↕</span></button></th>
+            </tr>
+          </thead>
+          <tbody id="acquisition-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer class="page-footer">
+      <span>Satellite-derived proxy estimates. Interpret alongside field observations and laboratory analysis.</span>
+      <span class="footer-brand">AquaScope &middot; Sentinel-2 L2A</span>
+    </footer>
+  </main>
+
+  <button id="to-top" class="to-top" type="button" aria-label="Back to top" title="Back to top"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <div id="toast-stack" class="toast-stack" aria-live="polite" aria-atomic="false"></div>
+
+  <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Enlarged image" hidden>
+    <button class="lightbox-close" type="button" aria-label="Close enlarged image">&times;</button>
+    <figure class="lightbox-figure"><img id="lightbox-image" alt=""><figcaption id="lightbox-caption"></figcaption></figure>
+  </div>
+
+  <script src="/static/app.js" defer></script>
+</body>
+</html>
